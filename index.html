@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b2a48">
+  <meta name="description" content="Kia Ora Client Hub — client relationships, follow-ups, notes and tasks in one place.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>Kia Ora Client Hub</title>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✺</div>
+        <div><strong>KIA ORA</strong><span>CLIENT HUB</span></div>
+      </div>
+      <nav class="sidebar-nav" aria-label="Primary">
+        <button data-view="dashboard" class="side-nav active"><span class="nav-ico">⌂</span><span>Kia Ora</span></button>
+        <button data-view="clients" class="side-nav"><span class="nav-ico">♙</span><span>Iwi / Clients</span></button>
+        <button data-view="calendar" class="side-nav"><span class="nav-ico">□</span><span>Calendar</span></button>
+        <button data-view="tasks" class="side-nav"><span class="nav-ico">☑</span><span>Tasks</span></button>
+        <button data-view="notes" class="side-nav"><span class="nav-ico">▤</span><span>Notes</span></button>
+        <button data-view="settings" class="side-nav"><span class="nav-ico">⚙</span><span>Settings</span></button>
+      </nav>
+      <div class="whanaungatanga"><strong>Whakawhanaungatanga</strong><span>Building strong relationships</span></div>
+      <div class="profile-mini">
+        <div class="profile-avatar">HB</div>
+        <div class="profile-text"><strong id="profileName">Hemi Brown</strong><span id="profileMode">Demo mode</span></div>
+        <button id="authBtn" class="ghost-icon" title="Sign in / out">↪</button>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <button id="menuBtn" class="mobile-menu" aria-label="Open menu">☰</button>
+        <div class="global-search"><span>⌕</span><input id="globalSearch" placeholder="Search clients, notes, tasks..." autocomplete="off"></div>
+        <div class="top-actions">
+          <button class="top-icon" id="notifBtn" title="Notifications">♧<b id="notifCount">3</b></button>
+          <button class="top-icon" id="topClientBtn" title="Add client">＋</button>
+          <button class="top-icon" data-view="calendar" title="Calendar">□</button>
+          <button class="top-icon avatar-top" id="topAuthBtn" title="Sign in / out">HB</button>
+        </div>
+      </header>
+
+      <main id="app" class="main"></main>
+    </section>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button data-view="dashboard" class="mobile-nav-btn active"><span>⌂</span><small>Home</small></button>
+    <button data-view="clients" class="mobile-nav-btn"><span>♙</span><small>Clients</small></button>
+    <button data-view="calendar" class="mobile-nav-btn"><span>□</span><small>Calendar</small></button>
+    <button data-view="tasks" class="mobile-nav-btn"><span>☑</span><small>Tasks</small></button>
+    <button data-view="settings" class="mobile-nav-btn"><span>⚙</span><small>More</small></button>
+  </nav>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop" data-close-modal></div>
+    <section class="modal-card">
+      <div class="modal-head"><div><div class="eyebrow">CLIENT</div><h2 id="modalTitle">Add client</h2></div><button class="close-btn" data-close-modal>×</button></div>
+      <form id="clientForm" class="form-grid">
+        <input type="hidden" name="id">
+        <label>Name<input name="name" required placeholder="Jane Smith"></label>
+        <label>Company<input name="company" placeholder="Acme Ltd"></label>
+        <label>Email<input name="email" type="email" placeholder="jane@example.com"></label>
+        <label>Phone<input name="phone" placeholder="+64 ..."></label>
+        <label>Status<select name="status"><option>Active</option><option>Prospect</option><option>On hold</option><option>Inactive</option></select></label>
+        <label>Tags<input name="tags" placeholder="Partner, Renewal"></label>
+        <label class="full">Notes<textarea name="notes" rows="4" placeholder="Key context, preferences, next steps..."></textarea></label>
+        <div class="form-actions full"><button type="button" class="btn secondary" data-close-modal>Cancel</button><button class="btn primary" type="submit">Save client</button></div>
+      </form>
+    </section>
+  </div>
+
+  <div id="authModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modal-backdrop" data-close-auth></div>
+    <section class="modal-card auth-card">
+      <div class="modal-head"><div><div class="eyebrow">ACCOUNT</div><h2 id="authTitle">Sign in to Client Hub</h2></div><button class="close-btn" data-close-auth>×</button></div>
+      <form id="authForm" class="form-grid one-col">
+        <label>Email<input name="email" type="email" required placeholder="you@example.com"></label>
+        <label>Password<input name="password" type="password" required minlength="6" placeholder="At least 6 characters"></label>
+        <div class="auth-note">For the first version, you can use Demo Mode without an account. Add Supabase settings to enable real sign-in and cloud data.</div>
+        <div class="form-actions full"><button type="button" class="btn secondary" id="demoModeBtn">Use demo mode</button><button class="btn primary" type="submit">Sign in</button></div>
+        <button type="button" class="link-btn" id="signupBtn">Create account instead</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}</script>
+</body>
+</html>
