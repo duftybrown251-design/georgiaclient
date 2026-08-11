@@ -88,6 +88,31 @@
     </section>
   </div>
 
+  <div id="noteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="noteTitle">
+    <div class="modal-backdrop" data-close-note></div>
+    <section class="modal-card">
+      <div class="modal-head"><div><div class="eyebrow">CLIENT NOTE</div><h2 id="noteTitle">Add note</h2></div><button class="close-btn" data-close-note>×</button></div>
+      <form id="noteForm" class="form-grid one-col">
+        <label>Client<select name="client_id" id="noteClient" required></select></label>
+        <label>Note<textarea name="body" rows="6" required placeholder="Write your note..."></textarea></label>
+        <div class="form-actions full"><button type="button" class="btn secondary" data-close-note>Cancel</button><button class="btn primary" type="submit">Save note</button></div>
+      </form>
+    </section>
+  </div>
+
+  <div id="taskModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="taskTitle">
+    <div class="modal-backdrop" data-close-task></div>
+    <section class="modal-card">
+      <div class="modal-head"><div><div class="eyebrow">FOLLOW UP</div><h2 id="taskTitle">Add task</h2></div><button class="close-btn" data-close-task>×</button></div>
+      <form id="taskForm" class="form-grid one-col">
+        <label>Client<select name="client_id" id="taskClient"></select></label>
+        <label>Task<input name="title" required placeholder="Follow up with client"></label>
+        <label>Due date<input name="due_date" type="date" required></label>
+        <div class="form-actions full"><button type="button" class="btn secondary" data-close-task>Cancel</button><button class="btn primary" type="submit">Save task</button></div>
+      </form>
+    </section>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 
   <script src="config.js"></script>

@@ -94,11 +94,73 @@ function openClientModal(id=null){const modal=document.getElementById('modal'),f
 function closeModal(){document.getElementById('modal').classList.add('hidden')}
 async function saveClient(e){e.preventDefault();const f=new FormData(e.target);const id=f.get('id');const item={name:f.get('name').trim(),company:f.get('company').trim(),email:f.get('email').trim(),phone:f.get('phone').trim(),status:f.get('status'),tags:String(f.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),notes:f.get('notes').trim(),last_contact_date:today(),next_follow_up_date:today()};try{if(state.mode==='cloud'){if(id){await supabase.from('clients').update(item).eq('id',id)}else{const {data}=await supabase.from('clients').insert({...item,user_id:state.user.id}).select().single();item.id=data.id}}else{if(id)item.id=id;else item.id='local-'+Date.now();if(id)state.clients=state.clients.map(c=>c.id===id?{...c,...item}:c);else state.clients.unshift(item);saveLocal()}if(state.mode==='cloud')await loadCloud();closeModal();toast(id?'Client updated':'Client added');state.view='clients';render();}catch(err){toast('Could not save client')}
 }
-function openNoteModal(clientId=state.selectedClientId){const body=prompt('Add a note for '+(client(clientId)?.name||'this client'));if(!body)return;const item={id:'local-'+Date.now(),client_id:clientId,body,created_at:new Date().toISOString()};if(state.mode==='cloud'){supabase.from('notes').insert({...item,user_id:state.user.id}).then(({error})=>{if(error)return toast('Could not save note');state.notes.unshift(item);toast('Note added');render()});}else{state.notes.unshift(item);saveLocal();toast('Note added');render()}}
-function openTaskModal(clientId=state.selectedClientId){const title=prompt('Task title');if(!title)return;const due=prompt('Due date (YYYY-MM-DD)',today())||today();const item={id:'local-'+Date.now(),client_id:clientId,title,due_date:due,completed:false};if(state.mode==='cloud'){supabase.from('tasks').insert({...item,user_id:state.user.id}).then(async({error})=>{if(error)return toast('Could not save task');await loadCloud();toast('Task added');render()});}else{state.tasks.unshift(item);saveLocal();toast('Task added');render()}}
+function fillClientSelect(id,selected){
+ const sel=document.getElementById(id);
+ if(!sel)return;
+ sel.innerHTML='<option value="">Select a client</option>'+state.clients.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+ if(selected)sel.value=selected;
+}
+function openNoteModal(clientId=state.selectedClientId){
+ fillClientSelect('noteClient',clientId);
+ document.getElementById('noteForm').reset();
+ fillClientSelect('noteClient',clientId);
+ document.getElementById('noteModal').classList.remove('hidden');
+}
+function closeNoteModal(){document.getElementById('noteModal').classList.add('hidden')}
+async function saveNote(e){
+ e.preventDefault();
+ const f=new FormData(e.target);
+ const clientId=String(f.get('client_id')||'');
+ const body=String(f.get('body')||'').trim();
+ if(!clientId||!body){toast('Choose a client and enter a note');return;}
+ const item={id:'local-'+Date.now(),client_id:clientId,body,created_at:new Date().toISOString()};
+ try{
+  if(state.mode==='cloud'){
+   const {error}=await supabase.from('notes').insert({...item,user_id:state.user.id});
+   if(error)throw error;
+   await loadCloud();
+  }else{state.notes.unshift(item);saveLocal();}
+  closeNoteModal();toast('Note added');state.selectedClientId=clientId;render();
+ }catch(err){toast('Could not save note');}
+}
+function openTaskModal(clientId=state.selectedClientId){
+ document.getElementById('taskForm').reset();
+ fillClientSelect('taskClient',clientId);
+ document.getElementById('taskForm').elements.due_date.value=today();
+ document.getElementById('taskModal').classList.remove('hidden');
+}
+function closeTaskModal(){document.getElementById('taskModal').classList.add('hidden')}
+async function saveTask(e){
+ e.preventDefault();
+ const f=new FormData(e.target);
+ const clientId=String(f.get('client_id')||'');
+ const title=String(f.get('title')||'').trim();
+ const due=String(f.get('due_date')||today());
+ if(!title){toast('Enter a task');return;}
+ const item={id:'local-'+Date.now(),client_id:clientId||null,title,due_date:due,completed:false};
+ try{
+  if(state.mode==='cloud'){
+   const {error}=await supabase.from('tasks').insert({...item,user_id:state.user.id});
+   if(error)throw error;
+   await loadCloud();
+  }else{state.tasks.unshift(item);saveLocal();}
+  closeTaskModal();toast('Task added');render();
+ }catch(err){toast('Could not save task');}
+}
 function openAuth(){if(state.user){if(confirm('Sign out of Client Hub?'))supabase?.auth.signOut();return;}document.getElementById('authModal').classList.remove('hidden')}
 function closeAuth(){document.getElementById('authModal').classList.add('hidden')}
 async function authSubmit(e){e.preventDefault();if(!supabase){toast('Add Supabase settings to enable sign-in');return;}const f=new FormData(e.target);const email=f.get('email');const password=f.get('password');const fn=state.authMode==='signup'?supabase.auth.signUp.bind(supabase.auth):supabase.auth.signInWithPassword.bind(supabase.auth);const {error}=await fn({email,password});if(error){toast(error.message);return;}closeAuth();toast(state.authMode==='signup'?'Account created':'Signed in')}
 function switchAuthMode(){state.authMode=state.authMode==='signin'?'signup':'signin';document.getElementById('authTitle').textContent=state.authMode==='signup'?'Create your Client Hub account':'Sign in to Client Hub';document.getElementById('signupBtn').textContent=state.authMode==='signup'?'Back to sign in':'Create account instead'}
-document.querySelectorAll('[data-close-modal]').forEach(x=>x.addEventListener('click',closeModal));document.querySelectorAll('[data-close-auth]').forEach(x=>x.addEventListener('click',closeAuth));document.getElementById('clientForm').addEventListener('submit',saveClient);document.getElementById('authForm').addEventListener('submit',authSubmit);document.getElementById('signupBtn').addEventListener('click',switchAuthMode);document.getElementById('demoModeBtn').addEventListener('click',()=>{state.user=null;state.mode='demo';loadLocal();closeAuth();toast('Demo mode enabled');render()});
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-close-modal]'); if(t)closeModal();
+ const n=e.target.closest('[data-close-note]'); if(n)closeNoteModal();
+ const k=e.target.closest('[data-close-task]'); if(k)closeTaskModal();
+ const a=e.target.closest('[data-close-auth]'); if(a)closeAuth();
+});
+document.getElementById('clientForm').addEventListener('submit',saveClient);
+document.getElementById('noteForm').addEventListener('submit',saveNote);
+document.getElementById('taskForm').addEventListener('submit',saveTask);
+document.getElementById('authForm').addEventListener('submit',authSubmit);
+document.getElementById('signupBtn').addEventListener('click',switchAuthMode);
+document.getElementById('demoModeBtn').addEventListener('click',()=>{state.user=null;state.mode='demo';loadLocal();closeAuth();toast('Demo mode enabled');render()});
 (async function(){navWire();await initAuth();render();})();
